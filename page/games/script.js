@@ -547,7 +547,7 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
     try {
       if (isDirectLoad || isPrx || isNowgg) {
         let finalGameUrl = url;
-        if (isPrx) {
+        if (isPrx && !isNowgg) {
           finalGameUrl = `/embed.html?url=${encodeURIComponent(finalGameUrl)}`;
         }
         if (
