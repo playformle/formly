@@ -264,26 +264,7 @@ function updateSearchBarPlaceholder() {
 async function fetchYoutubeData(fetchId) {
   if (isLoading) return;
   toggleLoading(true);
-
-  // ✅ FIX: proper featured fallback pool
-  const fallbackQueries = [
-    "trending",
-    "music",
-    "gaming",
-    "news",
-    "movies",
-    "popular",
-    "shorts",
-  ];
-
-  let query = currentQuery.trim();
-
-  // If featured / empty search → pick a real feed keyword
-  if (!query) {
-    query =
-      fallbackQueries[Math.floor(Math.random() * fallbackQueries.length)];
-  }
-
+  const query = currentQuery.trim() || "popular videos";
   const safeQuery = encodeURIComponent(query);
   const url = `${YOUTUBE_BASE_URL}${safeQuery}?max=${YOUTUBE_MAX_RESULTS}`;
 
@@ -293,25 +274,23 @@ async function fetchYoutubeData(fetchId) {
 
   try {
     const res = await fetch(url);
-
     if (fetchId !== currentFetchId) return;
 
     if (!res.ok) {
-      throw new Error(`HTTP Error ${res.status}`);
+      throw new Error(`HTTP Error ${res.status} for URL: ${url}`);
     }
 
     const data = await res.json();
 
-    if (!data?.items?.length) {
-      throw new Error("No YouTube results returned.");
+    if (!data || !data.items || data.items.length === 0) {
+      throw new Error("API returned empty or invalid results.");
     }
 
     renderItems(data.items);
   } catch (err) {
     if (fetchId === currentFetchId) {
-      console.error("YouTube error:", err);
-      noResultsMessage.textContent =
-        "Featured feed failed to load. Try again.";
+      console.error("YouTube data fetching error:", err);
+      noResultsMessage.textContent = `YouTube Fetch Failed: ${err.message}`;
       noResultsMessage.style.display = "block";
     }
   } finally {
@@ -320,7 +299,6 @@ async function fetchYoutubeData(fetchId) {
     }
   }
 }
-
 
 async function fetchTwitchData(fetchId) {
   if (isLoading) return;
