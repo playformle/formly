@@ -2,7 +2,7 @@
   const THEME_KEY = "current_theme";
   const FONT_KEY = "current_font";
   const CUSTOM_CONFIG_KEY = "custom_theme_config";
-  const DEFAULT_THEME = "vapor";
+  const DEFAULT_THEME = "midnight";
 
   window.applyVtheme = () => {
     return new Promise((resolve) => {
