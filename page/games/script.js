@@ -511,6 +511,24 @@ function finishLoading() {
 }
 
 async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
+  const isMissingFreebuisnessFile = (text) =>
+    typeof text === "string" &&
+    text.includes("Couldn't find the requested file") &&
+    text.includes("freebuisness/html");
+
+  const renderBrokenGameMessage = () => {
+    const brokenHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
+      body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at top,#1d2a44,#0e1526);font-family:Inter,system-ui,sans-serif;color:#e8f0ff}
+      .card{max-width:680px;margin:24px;padding:28px;border-radius:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(8px);box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:center}
+      .emoji{font-size:34px;margin-bottom:12px}.title{font-size:24px;font-weight:700}.sub{opacity:.85;margin-top:10px}
+    </style></head><body><div class="card"><div class="emoji">⚡</div><div class="title">This game is currently broken and we're working on fixing it :)</div><div class="sub">Please try another game for now.</div></div></body></html>`;
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(brokenHtml);
+    iframe.contentDocument.close();
+    clearTimeout(switchTextTimeout);
+    finishLoading();
+  };
+
   gameOverlay.style.display = "block";
   void gameOverlay.offsetWidth;
   loadingMessage.textContent = "LOADING..";
@@ -528,19 +546,6 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
   setTimeout(async () => {
     try {
       if (isDirectLoad || isPrx || isNowgg) {
-        const renderBrokenGameMessage = () => {
-          const brokenHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
-            body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at top,#1d2a44,#0e1526);font-family:Inter,system-ui,sans-serif;color:#e8f0ff}
-            .card{max-width:680px;margin:24px;padding:28px;border-radius:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(8px);box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:center}
-            .emoji{font-size:34px;margin-bottom:12px}.title{font-size:24px;font-weight:700}.sub{opacity:.85;margin-top:10px}
-          </style></head><body><div class="card"><div class="emoji">⚡</div><div class="title">This game is currently broken and we're working on fixing it :)</div><div class="sub">Please try another game for now.</div></div></body></html>`;
-          iframe.contentDocument.open();
-          iframe.contentDocument.write(brokenHtml);
-          iframe.contentDocument.close();
-          clearTimeout(switchTextTimeout);
-          finishLoading();
-        };
-
         let finalGameUrl = url;
         if (isPrx) {
           finalGameUrl = `/embed.html?url=${encodeURIComponent(finalGameUrl)}`;
@@ -553,12 +558,7 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
           try {
             const precheck = await fetch(finalGameUrl, { cache: "no-store" });
             const text = await precheck.text();
-            if (
-              text.includes(
-                "Couldn't find the requested file"
-              ) &&
-              text.includes("freebuisness/html")
-            ) {
+            if (isMissingFreebuisnessFile(text)) {
               renderBrokenGameMessage();
               return;
             }
@@ -579,6 +579,10 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
         const response = await fetch(url + "?t=" + Date.now());
         if (!response.ok) throw new Error("CORS or 404");
         const html = await response.text();
+        if (isMissingFreebuisnessFile(html)) {
+          renderBrokenGameMessage();
+          return;
+        }
         iframe.contentDocument.open();
         iframe.contentDocument.write(html);
         iframe.contentDocument.close();
