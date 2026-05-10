@@ -345,12 +345,10 @@
       <h1>
         <span class="vapor-text" id="vapor-text">
           <span class="v-char" id="v-char">T</span
-          ><span class="a-char" id="a-char">H</span
-          ><span class="p-char" id="p-char">U</span
-          ><span class="o-char" id="o-char">N</span
-          ><span class="r-char" id="r-char">D</span
-          ><span class="e-char" id="e-char">E</span
-          ><span class="n-char" id="n-char">R</span>
+          ><span class="a-char" id="a-char">HU</span
+          ><span class="p-char" id="p-char">ND</span
+          ><span class="o-char" id="o-char">E</span
+          ><span class="r-char" id="r-char">R</span>
         </span>
         <span class="brand-text" id="brand-text">v2</span>
       </h1>
@@ -515,7 +513,7 @@
 
         document.getElementById("initial-overlay").classList.add("fade-out");
 
-        ["n-char", "e-char", "r-char", "o-char", "p-char", "a-char", "v-char"].forEach((id, i) =>
+        ["r-char", "o-char", "p-char", "a-char", "v-char"].forEach((id, i) =>
           setTimeout(
             () => document.getElementById(id).classList.add("visible"),
             300 + i * 50
