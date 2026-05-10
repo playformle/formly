@@ -181,7 +181,7 @@
 
   const H2_TITLE_ICON = (icon) =>
     icon === "thunder-logo"
-      ? `<img src="/asset/thunder.svg" alt="THUNDER" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;">`
+      ? `<img src="/asset/thunder.svg" alt="THUNDER" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;filter:brightness(0) invert(1);">`
       : `<i class="${icon}"></i>`;
 
   function resetSideButtonActiveState() {

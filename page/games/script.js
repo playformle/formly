@@ -562,6 +562,12 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
               renderBrokenGameMessage();
               return;
             }
+            iframe.contentDocument.open();
+            iframe.contentDocument.write(text);
+            iframe.contentDocument.close();
+            clearTimeout(switchTextTimeout);
+            finishLoading();
+            return;
           } catch (e) {}
         }
         iframe.onload = () => {
