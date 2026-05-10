@@ -48,6 +48,47 @@ let userIPPrefix = "";
 let isGlobalSearchActive = false;
 let debounceTimer;
 
+function pickRandomGames(count = 3) {
+  const pool = allGames.filter((g) => g && g.name && g.url);
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+function showGameUnavailablePopup(gameName) {
+  const existing = document.getElementById("game-unavailable-overlay");
+  if (existing) existing.remove();
+  const recs = pickRandomGames(3);
+  const overlay = document.createElement("div");
+  overlay.id = "game-unavailable-overlay";
+  overlay.style.cssText =
+    "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;";
+  const box = document.createElement("div");
+  box.style.cssText =
+    "max-width:560px;width:100%;background:#111827;color:#e5e7eb;border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:18px;font-family:inherit;";
+  const items = recs
+    .map(
+      (g) =>
+        `<button data-url="${g.url}" style="width:100%;text-align:left;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#1f2937;color:#e5e7eb;cursor:pointer;">${g.name}</button>`
+    )
+    .join("");
+  box.innerHTML = `<h3 style="margin:0 0 8px 0;">This game is currently not available.</h3>
+    <p style="margin:0 0 8px 0;opacity:.9;">Don't fret, ${gameName} will be back up soon. While you wait, check out some other games!:</p>
+    ${items}
+    <div style="text-align:right;margin-top:12px;"><button id="close-game-unavailable" style="padding:8px 12px;border-radius:10px;border:none;background:#3b82f6;color:white;cursor:pointer;">Close</button></div>`;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  box.querySelector("#close-game-unavailable").onclick = () => overlay.remove();
+  box.querySelectorAll("button[data-url]").forEach((btn) => {
+    btn.onclick = () => {
+      overlay.remove();
+      playGame(btn.getAttribute("data-url"), true, btn.textContent, false, false);
+    };
+  });
+}
+
 const GRADIENT_PALETTE = [];
 for (let i = 0; i < 20; i++) {
   const hue = Math.floor((360 / 20) * i);
@@ -515,6 +556,11 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
     typeof text === "string" &&
     text.includes("Couldn't find the requested file") &&
     text.includes("freebuisness/html");
+  const isNotFoundDocument = (text) =>
+    typeof text === "string" &&
+    text.includes("<meta name=\"color-scheme\" content=\"light dark\">") &&
+    text.includes("<pre") &&
+    text.includes("Not found");
 
   const renderBrokenGameMessage = () => {
     const brokenHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -571,6 +617,15 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
           } catch (e) {}
         }
         iframe.onload = () => {
+          try {
+            const docText =
+              iframe.contentDocument?.documentElement?.innerHTML || "";
+            if (isNotFoundDocument(docText)) {
+              exitGame();
+              showGameUnavailablePopup(gameName || "This game");
+              return;
+            }
+          } catch (e) {}
           clearTimeout(switchTextTimeout);
           finishLoading();
         };
@@ -585,8 +640,9 @@ async function playGame(url, isDirectLoad, gameName, isNowgg, isPrx) {
         const response = await fetch(url + "?t=" + Date.now());
         if (!response.ok) throw new Error("CORS or 404");
         const html = await response.text();
-        if (isMissingFreebuisnessFile(html)) {
-          renderBrokenGameMessage();
+        if (isMissingFreebuisnessFile(html) || isNotFoundDocument(html)) {
+          exitGame();
+          showGameUnavailablePopup(gameName || "This game");
           return;
         }
         iframe.contentDocument.open();
