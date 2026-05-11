@@ -7,8 +7,8 @@
       "Type": "mix"
     },
     {
-      "Name": "Ports",
-      "Icon": "ri-terminal-box-line",
+      "Name": "Exclusives",
+      "Icon": "ri-magic-fill",
       "File": "/asset/json/zones/gnports.json",
       "Type": "jsd"
     },
