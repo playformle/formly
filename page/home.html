@@ -376,7 +376,7 @@
     <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/build/three.core.min.js"></script>
     <script src="/script/vantafog.min.js"></script>
     <script>
-      const VERSION = "v2";
+      const VERSION = "v1";
       const splahses = [
         "Go to the menu at the bottom left to view the games!",
       ];
@@ -432,7 +432,7 @@
       function populateFooterInfo() {
         const textEl = document.getElementById("footer-info-text");
 
-        textEl.innerHTML = `<span style="color: rgba(var(--cb),0.8);">813 games and counting!</span><div class="footer-divider"></div><span id="version-link" class="clickable"><div class="footer-tooltip">Click to open changelog</div>${VERSION}</span>`;
+        textEl.innerHTML = `<span style="color: rgba(var(--cb),0.8);">The home of Letter Lock!</span><div class="footer-divider"></div><span id="version-link" class="clickable"><div class="footer-tooltip">Click to open changelog</div>${VERSION}</span>`;
 
         document.getElementById("version-link").onclick = () =>
           window.open("/asset/changelog.txt", "_blank");
