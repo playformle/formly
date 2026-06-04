@@ -4,20 +4,8 @@
       "Name": "Games",
       "Icon": "ri-gamepad-line",
       "File": "/asset/json/zones/gnmath.json",
-      "Type": "mix"
-    },
-    {
-      "Name": "Exclusives",
-      "Icon": "ri-magic-fill",
-      "File": "/asset/json/zones/gnports.json",
-      "Type": "jsd"
-    },
-    {
-      "Name": "Now.GG",
-      "Icon": "ri-play-circle-line",
-      "File": "/asset/json/zones/nowgg.json",
-      "Type": "proxy",
-      "Description": "Now.GG games are powered by nowgg.fun/frogiesarcade.win.<br>Some games may not function correctly."
+      "Type": "mix",
+      "Description": "Here you can find Educational Games & Puzzles!
     }
   ],
   "Col2": []
