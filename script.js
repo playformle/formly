@@ -112,19 +112,9 @@
 
   const STARTUP_NOTIFICATION = {
     iconClass: "thunder-logo",
-    title: "Welcome to THUNDER!",
+    title: "Welcome to Formly!",
     content: `
-    ⚡ <b>Games</b>
-    Multiple game sources with search and filters
-    
-    🎵 <b>Listen</b>
-    TIDAL + SoundCloud support with playlists and queue
-    
-    📺 <b>Watch</b>
-    YouTube, Twitch, and Movies with source switching
-    
-    🎨 <b>Customization</b>
-    Themes, fonts, and personalized settings
+    Love educational games? Puzzles? Well this is Formly, a free collection of educational puzzles and games designed to stretch those brains in form time. These games are educational, but are also (almost too) fun!
     `,
     buttonText: "Continue",
   };
@@ -133,48 +123,8 @@
     iconClass: "ri-history-line",
     title: "Changelog for v4.4",
     content: `
-    🤖 AI
-    - New AI source (that, yes, I pay for.)
-    - Models:
-    &nbsp;&nbsp;* Claude 4.5 Haiku
-    &nbsp;&nbsp;* Gemini 3 Flash
-    &nbsp;&nbsp;* GPT-OSS (low & high)
-    &nbsp;&nbsp;* Automatic
-
-    - Added personality system
-    - (AI also has knowledge about THUNDER)
-  
-    🎮 Play
-    - Added 3 new gamelists:
-    &nbsp;&nbsp;* TGLSC
-    &nbsp;&nbsp;* Seraph
-    &nbsp;&nbsp;* 3kh0 (bugged sadly)
-
-    - ~4,000 total games (10 gamelists)
-    - Redesigned gamelist source dropdown (less cluttered)
-  
-    🎵 Music (Listen)
-    - Added favorites system
-    - Added queue system
-    - Added playlist shuffle
-    - Re-added repeat button
-    - Fixed music source switching bug
-    - Fixed TIDAL playback
-    - Tweaked equalizer balancing
-    - Audio and images now properly served through server
-  
-    🎨 Settings & UI
-    - Fully redesigned Settings UI
-    - Added Light Mode
-    - Added custom theme system
-    - Reworked color system for custom themes
-    - Added partners to Partners menu
-    - Replaced weather with date on Home
-    - Added new splash texts
-    - Updated various icons
-  
-    📢 Ads
-    - Switched back to a more reliable ad provider
+    Looks like there's nothing here yet...
+    Check back later!
     `,
     buttonText: "Back",
   };

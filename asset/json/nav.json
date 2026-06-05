@@ -12,7 +12,6 @@
     "iconClass": "ri-gamepad-line",
     "name": "Play",
     "type": "item",
-    "url": "/page/games/index.html",
-    "tag": "Educational Games & Puzzles!"
+    "url": "/page/games/index.html"
   }
 ]
