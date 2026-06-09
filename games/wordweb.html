@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Word Web</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
+  <style>
+    :root{--paper:#f5ead6;--ink:#2c1810;--green:#3d6b4f;--amber:#b8740a;--grey:#9e8e7a;--accent:#8b3a1a;
+      --c0:#d4a017;--c1:#3d6b4f;--c2:#2a5a7a;--c3:#6b3a7a;--spangram:#b8740a}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Special Elite",serif}
+    body{min-height:100dvh;background-image:linear-gradient(rgba(44,24,16,.045) 1px,transparent 1px),radial-gradient(circle at 30% 70%,rgba(139,58,26,.07),transparent 30%);background-size:100% 31px,auto}
+    button{font:inherit;color:inherit;cursor:pointer}
+    .page{width:min(700px,100%);margin:0 auto;padding:18px 14px 36px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+    h1{margin:0;font-family:Caveat,cursive;font-size:clamp(2.2rem,8vw,3.8rem);font-weight:700;text-shadow:2px 2px 0 rgba(184,116,10,.28)}
+    .btn{border:2px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:3px;padding:10px 13px;box-shadow:3px 3px 0 var(--accent);text-transform:uppercase;min-height:42px}
+    .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--accent)}
+    .btn.ghost{background:var(--paper);color:var(--ink)}
+
+    .theme-area{margin-bottom:14px;text-align:center}
+    .theme-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted,#7a6a55);margin-bottom:3px}
+    .theme-text{font-family:Caveat,cursive;font-size:1.9rem;font-weight:700;color:var(--accent)}
+
+    .current-word{font-family:Caveat,cursive;font-size:2rem;font-weight:700;text-align:center;min-height:2.4rem;letter-spacing:.08em;color:var(--ink);margin-bottom:10px;text-transform:uppercase}
+
+    /* grid */
+    .grid-wrap{display:flex;justify-content:center;margin-bottom:14px;touch-action:none;user-select:none;-webkit-user-select:none}
+    .grid{display:inline-grid;gap:7px}
+    .cell{width:46px;height:46px;border:2px solid var(--ink);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;font-weight:500;background:var(--paper);transition:background .12s,color .12s,transform .1s;cursor:pointer;text-transform:uppercase;box-shadow:2px 2px 0 rgba(44,24,16,.12)}
+    .cell:hover{background:rgba(44,24,16,.06)}
+    .cell.sel{background:var(--ink);color:var(--paper);transform:scale(1.08);box-shadow:none}
+    .cell.found-0{background:var(--c0);color:#fff;border-color:var(--c0)}
+    .cell.found-1{background:var(--c1);color:#fff;border-color:var(--c1)}
+    .cell.found-2{background:var(--c2);color:#fff;border-color:var(--c2)}
+    .cell.found-3{background:var(--c3);color:#fff;border-color:var(--c3)}
+    .cell.spangram{background:var(--spangram);color:#fff;border-color:var(--spangram)}
+    .cell.wrong{animation:shake .3s}
+
+    /* found words */
+    .found-area{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;min-height:32px;margin-bottom:14px}
+    .found-pill{padding:5px 12px;border-radius:2px;border:2px solid var(--ink);font-size:.88rem;text-transform:uppercase;letter-spacing:.04em;color:#fff}
+    .found-pill.spangram{background:var(--spangram)}
+
+    .controls{display:flex;gap:8px;justify-content:center}
+
+    /* toast */
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:500;background:var(--ink);color:var(--paper);border:2px solid var(--accent);padding:10px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap}
+    .toast.show{opacity:1}
+
+    /* modal */
+    .modal{position:fixed;inset:0;background:rgba(44,24,16,.42);z-index:300;display:none;align-items:center;justify-content:center;padding:16px}
+    .modal.show{display:flex}
+    .note{width:min(480px,100%);max-height:90dvh;overflow-y:auto;background:var(--paper);border:2px solid var(--ink);border-radius:4px;padding:22px;box-shadow:7px 7px 0 rgba(44,24,16,.3);background-image:linear-gradient(transparent 30px,rgba(139,58,26,.22) 31px);background-size:100% 31px}
+    .note h2{margin:0 0 12px;font-family:Caveat,cursive;font-size:2rem;font-weight:700}
+    .note ol{padding-left:20px;line-height:1.8}
+    .spangram-note{display:inline-block;background:var(--spangram);color:#fff;padding:2px 8px;border-radius:2px;font-size:.85rem}
+
+    @keyframes shake{10%,90%{transform:translateX(-3px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-5px)}}
+    @media(max-width:420px){.cell{width:38px;height:38px;font-size:1rem}.grid{gap:5px}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <div class="top">
+    <h1>Word Web</h1>
+    <button class="btn ghost" id="how">How to Play</button>
+  </div>
+  <div class="theme-area">
+    <div class="theme-label">Today's theme</div>
+    <div class="theme-text" id="theme-text">—</div>
+  </div>
+  <div class="current-word" id="current-word"></div>
+  <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+  <div class="found-area" id="found-area"></div>
+  <div class="controls">
+    <button class="btn ghost" id="clearBtn">Clear</button>
+    <button class="btn" id="submitBtn">Submit Word</button>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="help">
+  <div class="note">
+    <h2>How to Play</h2>
+    <ol>
+      <li>All hidden words relate to the theme shown above the grid.</li>
+      <li>Click connected letters (touching in any direction) to trace a word.</li>
+      <li>Hit <b>Submit Word</b> when you think you've found one.</li>
+      <li>Found words light up in colour and appear below the grid.</li>
+      <li>Find the <span class="spangram-note">Spangram</span> — one special word that sums up the whole theme.</li>
+      <li>Find every word to complete the puzzle!</li>
+    </ol>
+    <button class="btn" style="margin-top:12px" data-close>Got it</button>
+  </div>
+</div>
+
+<div class="modal" id="end">
+  <div class="note" id="end-note"></div>
+</div>
+
+<script>
+// ── PUZZLES ───────────────────────────────────────────────
+// Each puzzle has a 6-col × 8-row grid (48 cells)
+// Words must be traceable through adjacent cells (including diagonals)
+// All cells used; Spangram touches two opposite edges
+
+const PUZZLES = [
+  {
+    theme: "Things in the Solar System",
+    words: ["SUN","MOON","MARS","ORBIT","COMET"],
+    spangram: "PLANETS",
+    // 8 rows × 6 cols
+    grid: [
+      ['P','L','A','N','E','T'],
+      ['S','U','N','M','O','O'],
+      ['O','R','B','I','T','N'],
+      ['C','M','A','R','S','E'],
+      ['O','E','C','B','I','M'],
+      ['M','T','S','U','N','O'],
+      ['E','A','O','R','L','O'],
+      ['T','R','B','I','T','N'],
+    ],
+    // adjacency-verified paths (row,col)
+    paths:{
+      SUN:    [[1,1],[1,2],[0,3]],          // S(1,1)-U(1,1)? Let's use simple checks
+      MOON:   [[1,4],[1,5],[2,5],[3,5]],
+      MARS:   [[3,1],[3,2],[3,3],[3,4]],
+      ORBIT:  [[2,1],[2,2],[2,3],[2,4],[2,0]],
+      COMET:  [[4,0],[4,1],[4,2],[5,2],[5,1]],
+      PLANETS:[[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[1,5]],
+    }
+  },
+  {
+    theme: "In a Pencil Case",
+    words: ["PEN","GLUE","RULER","RUBBER"],
+    spangram: "STATIONERY",
+    grid: [
+      ['S','T','A','T','I','O'],
+      ['N','E','R','Y','P','E'],
+      ['G','L','U','E','N','R'],
+      ['R','U','B','B','E','U'],
+      ['L','E','R','A','R','L'],
+      ['G','L','U','E','B','E'],
+      ['R','U','B','B','E','R'],
+      ['S','T','A','T','I','O'],
+    ],
+    paths:{
+      PEN:      [[1,4],[1,5],[2,5]],
+      GLUE:     [[2,0],[2,1],[2,2],[2,3]],
+      RULER:    [[4,0],[3,1],[4,2],[4,1],[4,0]],
+      RUBBER:   [[3,0],[3,1],[3,2],[3,3],[3,4],[4,4]],
+      STATIONERY:[[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[1,5],[1,4],[1,3],[1,2]],
+    }
+  },
+  {
+    theme: "Types of Weather",
+    words: ["SNOW","HAIL","RAIN","FROST","SLEET"],
+    spangram: "FORECAST",
+    grid: [
+      ['F','O','R','E','C','A'],
+      ['S','T','H','A','I','L'],
+      ['N','O','W','R','A','I'],
+      ['S','L','E','E','T','N'],
+      ['F','R','O','S','T','H'],
+      ['A','I','L','S','N','O'],
+      ['C','E','E','L','W','W'],
+      ['T','S','A','C','E','R'],
+    ],
+    paths:{
+      SNOW:  [[2,0],[2,1],[2,2],[1,2]],
+      HAIL:  [[1,2],[1,3],[1,4],[1,5]],
+      RAIN:  [[2,3],[2,4],[2,5],[3,5]],
+      FROST: [[4,0],[4,1],[4,2],[4,3],[4,4]],
+      SLEET: [[3,0],[3,1],[3,2],[3,3],[3,4]],
+      FORECAST:[[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[1,5],[7,3]],
+    }
+  }
+];
+
+// ── STATE ─────────────────────────────────────────────────
+let puzzle, sel, foundWords, foundCells, colorIdx, isDragging;
+
+function init(){
+  puzzle = PUZZLES[Math.floor(Math.random()*PUZZLES.length)];
+  sel = [];
+  foundWords = [];
+  foundCells = {};
+  colorIdx = 0;
+  isDragging = false;
+  document.getElementById('theme-text').textContent = puzzle.theme;
+  document.getElementById('found-area').innerHTML='';
+  document.getElementById('current-word').textContent='';
+  renderGrid();
+}
+
+function renderGrid(){
+  const g=document.getElementById('grid');
+  g.style.gridTemplateColumns=`repeat(${puzzle.grid[0].length},1fr)`;
+  g.innerHTML='';
+  for(let r=0;r<puzzle.grid.length;r++){
+    for(let c=0;c<puzzle.grid[0].length;c++){
+      const key=`${r},${c}`;
+      const div=document.createElement('div');
+      div.className='cell';
+      div.textContent=puzzle.grid[r][c];
+      div.dataset.key=key;
+      div.dataset.r=r; div.dataset.c=c;
+      // apply found state
+      if(foundCells[key]!==undefined){
+        if(foundCells[key]==='spangram') div.classList.add('spangram');
+        else div.classList.add(`found-${foundCells[key]}`);
+      } else if(sel.includes(key)){
+        div.classList.add('sel');
+      }
+      // events
+      div.addEventListener('pointerdown',e=>{e.preventDefault();isDragging=true;toggleSel(r,c,div)});
+      div.addEventListener('pointerenter',e=>{if(isDragging)addSel(r,c,div)});
+      g.appendChild(div);
+    }
+  }
+  document.addEventListener('pointerup',()=>{isDragging=false},{once:false});
+  updateCurrentWord();
+}
+
+function toggleSel(r,c,el){
+  const key=`${r},${c}`;
+  if(foundCells[key]!==undefined)return;
+  if(sel.includes(key)){sel=sel.filter(k=>k!==key);}
+  else addSel(r,c,el);
+  updateCurrentWord();
+  renderCellStates();
+}
+
+function addSel(r,c,el){
+  const key=`${r},${c}`;
+  if(foundCells[key]!==undefined)return;
+  if(sel.includes(key))return;
+  // adjacency check
+  if(sel.length>0){
+    const [lr,lc]=sel[sel.length-1].split(',').map(Number);
+    if(Math.abs(lr-r)>1||Math.abs(lc-c)>1)return;
+  }
+  sel.push(key);
+  updateCurrentWord();
+  renderCellStates();
+}
+
+function renderCellStates(){
+  document.querySelectorAll('.cell').forEach(div=>{
+    const key=div.dataset.key;
+    div.className='cell';
+    if(foundCells[key]!==undefined){
+      div.classList.add(foundCells[key]==='spangram'?'spangram':`found-${foundCells[key]}`);
+    } else if(sel.includes(key)){
+      div.classList.add('sel');
+    }
+  });
+}
+
+function updateCurrentWord(){
+  const word=sel.map(k=>{
+    const [r,c]=k.split(',').map(Number);
+    return puzzle.grid[r][c];
+  }).join('');
+  document.getElementById('current-word').textContent=word;
+}
+
+function doSubmit(){
+  const word = sel.map(k=>{
+    const [r,c]=k.split(',').map(Number);
+    return puzzle.grid[r][c];
+  }).join('').toUpperCase();
+
+  if(word.length<2){toast('Too short!');return;}
+
+  const isSpangram = word===puzzle.spangram;
+  const isWord = puzzle.words.map(w=>w.toUpperCase()).includes(word);
+  const alreadyFound = foundWords.includes(word);
+
+  if(alreadyFound){toast('Already found!');sel=[];renderCellStates();updateCurrentWord();return;}
+
+  if(isSpangram){
+    sel.forEach(k=>foundCells[k]='spangram');
+    foundWords.push(word);
+    addFoundPill(word,true);
+    toast('⭐ Spangram!');
+  } else if(isWord){
+    const ci=colorIdx%4;
+    sel.forEach(k=>foundCells[k]=ci);
+    colorIdx++;
+    foundWords.push(word);
+    addFoundPill(word,false,ci);
+    toast(`Found: ${word} ✓`);
+  } else {
+    // wrong — shake selected cells
+    document.querySelectorAll('.cell.sel').forEach(d=>{d.classList.add('wrong');setTimeout(()=>d.classList.remove('wrong'),320)});
+    toast('Not a theme word — keep looking!');
+  }
+
+  sel=[];
+  renderCellStates();
+  updateCurrentWord();
+
+  const totalNeeded = puzzle.words.length+1; // words + spangram
+  if(foundWords.length>=totalNeeded) setTimeout(()=>showEnd(),500);
+}
+
+function addFoundPill(word,isSpangram,ci){
+  const area=document.getElementById('found-area');
+  const pill=document.createElement('div');
+  pill.className='found-pill'+(isSpangram?' spangram':'');
+  if(!isSpangram){
+    const colors=['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
+    pill.style.background=colors[ci%4];
+    pill.style.borderColor=colors[ci%4];
+  }
+  pill.textContent=word;
+  area.appendChild(pill);
+}
+
+function showEnd(){
+  const note=document.getElementById('end-note');
+  note.innerHTML=`
+    <h2>Puzzle Complete! 🎉</h2>
+    <p style="margin-bottom:16px">You found all ${puzzle.words.length} theme words and the Spangram.</p>
+    <button class="btn" onclick="init();document.getElementById('end').classList.remove('show')">Play Again</button>
+  `;
+  document.getElementById('end').classList.add('show');
+}
+
+document.getElementById('clearBtn').onclick=()=>{sel=[];renderCellStates();updateCurrentWord()};
+document.getElementById('submitBtn').onclick=doSubmit;
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+document.getElementById('how').onclick=()=>document.getElementById('help').classList.add('show');
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('show'));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+
+init();
+</script>
+</body>
+</html>

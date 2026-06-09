@@ -1,12 +1,17 @@
 [
   {
-    "name": "Wordle",
-    "cover": "/covers/wordle.png",
-    "url": "/games/Wordle/index.html"
+    "name": "Letter Lcok",
+    "cover": "/covers/letterlock.png",
+    "url": "/games/letterlock.html"
   },
   {
-    "name": "Connections",
-    "cover": "/covers/connections.png",
-    "url": "/games/Connections/"
+    "name": "Linked Up",
+    "cover": "/covers/linkedup.png",
+    "url": "/games/linkedup.html"
+  },
+  {
+    "name": "Word Web",
+    "cover": "/covers/wordweb.png",
+    "url": "/games/wordweb.html"
   }
 ]

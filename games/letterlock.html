@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Letter Lock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#f5ead6;--ink:#2c1810;--green:#3d6b4f;--amber:#b8740a;--grey:#9e8e7a;--accent:#8b3a1a;--muted:#7a6a55;--line:rgba(44,24,16,.22)}
+  *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Special Elite",serif}
+  body{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 40px;background-image:linear-gradient(rgba(44,24,16,.045) 1px,transparent 1px),radial-gradient(circle at 20% 20%,rgba(139,58,26,.08),transparent 28%),radial-gradient(circle at 80% 10%,rgba(61,107,79,.07),transparent 22%);background-size:100% 31px,auto,auto}
+  button{font:inherit;color:inherit;cursor:pointer}
+
+  /* ── HEADER ── */
+  .header{width:min(520px,100%);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+  .game-title{font-family:Caveat,cursive;font-size:clamp(2rem,8vw,3rem);font-weight:700;text-shadow:2px 2px 0 rgba(184,116,10,.28);line-height:1}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .category-pill{background:var(--accent);color:var(--paper);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:2px;border:2px solid var(--ink);box-shadow:2px 2px 0 rgba(44,24,16,.2)}
+  .htp-btn{background:var(--paper);color:var(--ink);border:2px solid var(--ink);font-family:"Special Elite",serif;font-size:11px;padding:5px 10px;border-radius:2px;box-shadow:2px 2px 0 rgba(44,24,16,.15);text-transform:uppercase;transition:background .12s}
+  .htp-btn:hover{background:rgba(44,24,16,.07)}
+
+  /* ── GHOST ROW ── */
+  .ghost-row{display:flex;gap:5px;justify-content:center;margin-bottom:6px;min-height:30px;align-items:center}
+  .ghost-hint{width:48px;height:26px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent);opacity:0;transition:opacity .4s;border-bottom:2px dashed rgba(139,58,26,.35);font-family:Caveat,cursive;font-weight:700}
+  .ghost-hint.visible{opacity:1}
+
+  /* ── GUESS GRID ── */
+  .guess-grid{display:flex;flex-direction:column;gap:5px;align-items:center;margin-bottom:16px}
+  .guess-row{display:flex;gap:5px}
+  .tile{width:48px;height:48px;border:2px solid rgba(44,24,16,.25);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;text-transform:uppercase;background:rgba(255,255,255,.4);color:var(--ink);position:relative;box-shadow:2px 2px 0 rgba(44,24,16,.1)}
+  .tile.filled{border-color:var(--ink);background:rgba(255,255,255,.6)}
+  .tile.flip{animation:tileFlip .45s ease forwards}
+  @keyframes tileFlip{0%{transform:scaleY(1)}45%{transform:scaleY(0)}55%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+  .tile.green{background:var(--green);border-color:var(--green);color:#fff;box-shadow:2px 2px 0 rgba(44,24,16,.2)}
+  .tile.amber{background:var(--amber);border-color:var(--amber);color:#fff;box-shadow:2px 2px 0 rgba(44,24,16,.2)}
+  .tile.grey {background:var(--grey); border-color:var(--grey); color:#fff;box-shadow:2px 2px 0 rgba(44,24,16,.15)}
+  .guess-row.shake{animation:rowShake .35s ease}
+  @keyframes rowShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+  /* ── CURRENT INPUT ── */
+  .input-display{display:flex;gap:5px;justify-content:center;margin-bottom:6px;min-height:48px}
+  .input-tile{width:48px;height:48px;border:2px dashed rgba(44,24,16,.3);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;text-transform:uppercase;color:var(--ink);background:rgba(255,255,255,.2)}
+  .input-tile.has-letter{border-style:solid;border-color:var(--accent);background:rgba(139,58,26,.08);animation:popIn .12s ease;box-shadow:2px 2px 0 rgba(139,58,26,.2)}
+  .input-tile.cursor{border-color:var(--amber);box-shadow:0 0 0 2px rgba(184,116,10,.2);animation:pulse 1.1s ease-in-out infinite}
+  @keyframes popIn{0%{transform:scale(.85)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 2px rgba(184,116,10,.2)}50%{box-shadow:0 0 0 3px rgba(184,116,10,.4)}}
+
+  /* ── LENGTH HINT ── */
+  .length-hint{text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:12px;letter-spacing:.1em;text-transform:uppercase}
+
+  /* ── ALPHABET ── */
+  .alphabet{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;width:min(520px,100%);margin-bottom:16px}
+  .alpha-key{width:34px;height:34px;border:2px solid var(--ink);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.82rem;text-transform:uppercase;cursor:pointer;background:rgba(255,255,255,.5);color:var(--ink);transition:all .12s;user-select:none;box-shadow:2px 2px 0 rgba(44,24,16,.12)}
+  .alpha-key:hover:not(.green):not(.amber):not(.grey){background:rgba(44,24,16,.08);transform:translateY(-1px)}
+  .alpha-key:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(44,24,16,.12)}
+  .alpha-key.green{background:var(--green);border-color:var(--green);color:#fff}
+  .alpha-key.amber{background:var(--amber);border-color:var(--amber);color:#fff}
+  .alpha-key.grey {background:var(--grey); border-color:var(--grey); color:rgba(255,255,255,.6);cursor:default}
+
+  /* ── ACTIONS ── */
+  .actions{display:flex;gap:8px;justify-content:center}
+  .btn{border:2px solid var(--ink);border-radius:3px;padding:10px 18px;box-shadow:3px 3px 0 var(--accent);text-transform:uppercase;min-height:42px;font-family:"Special Elite",serif;font-size:.85rem;letter-spacing:.04em;transition:all .12s}
+  .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--accent)}
+  .btn-primary{background:var(--ink);color:var(--paper)}
+  .btn-primary:hover{background:#3d2010}
+  .btn-ghost{background:var(--paper);color:var(--ink)}
+  .btn-ghost:hover{background:rgba(44,24,16,.07)}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:500;background:var(--ink);color:var(--paper);border:2px solid var(--accent);padding:10px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;font-size:.9rem}
+  .toast.show{opacity:1}
+
+  /* ── MODAL ── */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(44,24,16,.42);z-index:200;align-items:center;justify-content:center;padding:16px}
+  .modal-bg.open{display:flex}
+  .modal{width:min(480px,100%);max-height:92dvh;overflow-y:auto;background:var(--paper);border:2px solid var(--ink);border-radius:4px;box-shadow:7px 7px 0 rgba(44,24,16,.3);background-image:linear-gradient(transparent 30px,rgba(139,58,26,.22) 31px);background-size:100% 31px}
+  @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:2px solid var(--ink)}
+  .modal-header h2{font-family:Caveat,cursive;font-size:1.8rem;font-weight:700;margin:0}
+  .close-btn{background:var(--paper);border:2px solid var(--ink);color:var(--ink);width:30px;height:30px;border-radius:2px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 rgba(44,24,16,.15)}
+  .close-btn:hover{background:rgba(44,24,16,.08)}
+  .modal-body{padding:18px 20px 20px}
+
+  /* HTP steps */
+  .htp-step{display:flex;gap:12px;margin-bottom:16px;align-items:flex-start}
+  .step-num{width:26px;height:26px;background:var(--accent);color:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Caveat,cursive;font-size:1.05rem;font-weight:700;flex-shrink:0;margin-top:1px;border:2px solid var(--ink)}
+  .step-body h4{font-family:Caveat,cursive;font-size:1.15rem;font-weight:700;margin:0 0 3px}
+  .step-body p{font-size:.82rem;color:var(--muted);line-height:1.6;margin:0}
+  .demo-row{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+  .demo-tile{width:36px;height:36px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.9rem;border:2px solid var(--ink);color:#fff}
+  .demo-tile.green{background:var(--green);border-color:var(--green)}
+  .demo-tile.amber{background:var(--amber);border-color:var(--amber)}
+  .demo-tile.grey {background:var(--grey); border-color:var(--grey)}
+  .demo-tile.empty{background:rgba(255,255,255,.5);color:var(--ink)}
+  .legend{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+  .legend-row{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted)}
+  .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .ghost-demo-row{display:flex;gap:5px;margin-top:10px}
+  .ghost-demo-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .ghost-top{width:36px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-family:Caveat,cursive;font-weight:700;color:var(--accent);border-bottom:2px dashed rgba(139,58,26,.4)}
+  .ghost-top.empty{color:transparent;border-color:transparent}
+
+  /* ── END CARD ── */
+  .end-bg{display:none;position:fixed;inset:0;background:rgba(44,24,16,.55);z-index:300;align-items:center;justify-content:center;padding:20px}
+  .end-bg.open{display:flex}
+  .end-card{background:var(--paper);border:2px solid var(--ink);border-radius:4px;max-width:380px;width:100%;overflow:hidden;box-shadow:7px 7px 0 rgba(44,24,16,.3);animation:slideUp .2s ease;background-image:linear-gradient(transparent 30px,rgba(139,58,26,.18) 31px);background-size:100% 31px}
+  .end-top{padding:22px 20px 18px;text-align:center;border-bottom:2px solid var(--ink);background:rgba(255,255,255,.25)}
+  .end-emoji{font-size:36px;margin-bottom:6px;display:block}
+  .end-title{font-family:Caveat,cursive;font-size:2rem;font-weight:700;margin-bottom:3px}
+  .end-title.win{color:var(--green)}
+  .end-title.lose{color:var(--accent)}
+  .end-subtitle{font-size:.8rem;color:var(--muted)}
+  .end-body{padding:18px 20px}
+  .end-word-big{text-align:center;margin-bottom:14px}
+  .end-word-big .word{font-family:Caveat,cursive;font-size:2.4rem;font-weight:700;letter-spacing:.06em;color:var(--ink)}
+  .end-word-big .def{font-size:.8rem;color:var(--muted);margin-top:5px;font-style:italic;line-height:1.5;max-width:300px;margin-left:auto;margin-right:auto}
+  .recap{display:flex;flex-direction:column;gap:4px;align-items:center;margin-bottom:16px}
+  .recap-row{display:flex;gap:4px}
+  .recap-tile{width:22px;height:22px;border-radius:2px}
+  .recap-tile.green{background:var(--green)}
+  .recap-tile.amber{background:var(--amber)}
+  .recap-tile.grey {background:var(--grey)}
+  .recap-tile.empty{background:rgba(44,24,16,.1)}
+  .end-btns{display:flex;gap:8px;justify-content:center}
+
+  @media(max-width:480px){
+    .tile,.input-tile{width:40px;height:40px;font-size:1.05rem}
+    .ghost-hint{width:40px}
+    .alpha-key{width:30px;height:30px;font-size:.75rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- HOW TO PLAY -->
+<div class="modal-bg" id="htp-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>How to Play</h2>
+      <button class="close-btn" onclick="closeModal('htp-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="htp-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Guess the hidden word</h4>
+          <p>A word has been picked from a themed category. Click letters in the alphabet palette to build your guess, then hit Submit.</p>
+        </div>
+      </div>
+      <div class="htp-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Read the colours</h4>
+          <div class="demo-row">
+            <div class="demo-tile green">L</div>
+            <div class="demo-tile grey">O</div>
+            <div class="demo-tile amber">N</div>
+            <div class="demo-tile grey">D</div>
+            <div class="demo-tile grey">O</div>
+            <div class="demo-tile grey">N</div>
+          </div>
+          <div class="legend" style="margin-top:10px">
+            <div class="legend-row"><div class="legend-dot" style="background:var(--green)"></div>Right letter, right position</div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--amber)"></div>Right letter, wrong position</div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--grey)"></div>Letter not in the word</div>
+          </div>
+        </div>
+      </div>
+      <div class="htp-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Watch the ghost hints</h4>
+          <p>Correct letters appear faintly above their column — so you can see the word taking shape.</p>
+          <div class="ghost-demo-row">
+            <div class="ghost-demo-col"><div class="ghost-top">L</div><div class="demo-tile green">L</div></div>
+            <div class="ghost-demo-col"><div class="ghost-top empty">—</div><div class="demo-tile grey">O</div></div>
+            <div class="ghost-demo-col"><div class="ghost-top empty">—</div><div class="demo-tile amber">N</div></div>
+            <div class="ghost-demo-col"><div class="ghost-top empty">—</div><div class="demo-tile grey">D</div></div>
+            <div class="ghost-demo-col"><div class="ghost-top empty">—</div><div class="demo-tile grey">O</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="htp-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>6 guesses to get it</h4>
+          <p>Use the alphabet palette to see which letters you've already tried. Grey ones are out — don't repeat them!</p>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:4px">
+        <button class="btn btn-primary" onclick="closeModal('htp-modal')">Let's go →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- END CARD -->
+<div class="end-bg" id="end-bg">
+  <div class="end-card">
+    <div class="end-top">
+      <span class="end-emoji" id="end-emoji">🎉</span>
+      <div class="end-title" id="end-title">—</div>
+      <div class="end-subtitle" id="end-subtitle"></div>
+    </div>
+    <div class="end-body">
+      <div class="end-word-big">
+        <div class="word" id="end-word"></div>
+        <div class="def" id="end-def"></div>
+      </div>
+      <div class="recap" id="end-recap"></div>
+      <div class="end-btns">
+        <button class="btn btn-primary" onclick="newGame()">Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="header">
+  <div class="game-title">Letter<span>Lock</span></div>
+  <div class="header-right">
+    <span class="category-pill" id="cat-pill">—</span>
+    <button class="htp-btn" onclick="openModal('htp-modal')">? How to play</button>
+  </div>
+</div>
+
+<div class="ghost-row" id="ghost-row"></div>
+<div class="guess-grid" id="guess-grid"></div>
+<div class="length-hint" id="length-hint"></div>
+<div class="input-display" id="input-display"></div>
+<div class="alphabet" id="alphabet"></div>
+<div class="actions">
+  <button class="btn btn-ghost" onclick="doBackspace()">⌫ Back</button>
+  <button class="btn btn-primary" onclick="doSubmit()">Submit →</button>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────
+const CATEGORIES = {
+  "World Capitals": [
+    { w:"PARIS",    d:"Capital of France, on the River Seine." },
+    { w:"TOKYO",    d:"Capital of Japan — the world's most populous metro area." },
+    { w:"CAIRO",    d:"Capital of Egypt, near the Pyramids of Giza." },
+    { w:"DELHI",    d:"Capital of India, one of the world's largest cities." },
+    { w:"SEOUL",    d:"Capital of South Korea." },
+    { w:"ROME",     d:"Capital of Italy — the Eternal City." },
+    { w:"LIMA",     d:"Capital of Peru, on the Pacific coast." },
+    { w:"OSLO",     d:"Capital of Norway." },
+    { w:"VIENNA",   d:"Capital of Austria, famous for classical music." },
+    { w:"BERLIN",   d:"Capital of Germany." },
+    { w:"OTTAWA",   d:"Capital of Canada." },
+    { w:"ATHENS",   d:"Capital of Greece — birthplace of democracy." },
+    { w:"MOSCOW",   d:"Capital of Russia." },
+    { w:"LONDON",   d:"Capital of the United Kingdom." },
+    { w:"MADRID",   d:"Capital of Spain." },
+    { w:"BEIJING",  d:"Capital of China." },
+    { w:"JAKARTA",  d:"Former capital of Indonesia (moved to Nusantara in 2024)." },
+    { w:"NAIROBI",  d:"Capital of Kenya." },
+    { w:"BANGKOK",  d:"Capital of Thailand." },
+    { w:"BOGOTA",   d:"Capital of Colombia, high in the Andes." },
+  ],
+  "Pencil Case": [
+    { w:"RULER",       d:"A flat measuring tool, usually 30 cm long." },
+    { w:"PENCIL",      d:"A graphite writing instrument." },
+    { w:"RUBBER",      d:"Used to erase pencil marks. Americans call it an eraser." },
+    { w:"SHARPENER",   d:"A small tool to give a pencil a fine point." },
+    { w:"COMPASS",     d:"A drawing instrument used to make perfect circles." },
+    { w:"HIGHLIGHTER", d:"A fluorescent pen used to mark important text." },
+    { w:"PROTRACTOR",  d:"A semicircular tool for measuring angles in degrees." },
+    { w:"SCISSORS",    d:"A cutting tool with two blades joined at a pivot." },
+    { w:"MARKER",      d:"A thick-tipped pen for bold writing or colouring." },
+    { w:"STAPLER",     d:"A device that fastens papers with metal staples." },
+    { w:"GLUE",        d:"An adhesive substance for sticking things together." },
+    { w:"CALCULATOR",  d:"An electronic device for performing maths quickly." },
+  ],
+  "School Subjects": [
+    { w:"MATHS",      d:"The study of numbers, shapes, and patterns." },
+    { w:"ENGLISH",    d:"The study of language, literature, and writing." },
+    { w:"SCIENCE",    d:"The study of the natural world through experiment." },
+    { w:"HISTORY",    d:"The study of past events and their significance." },
+    { w:"GEOGRAPHY",  d:"The study of the Earth, its landscapes, and peoples." },
+    { w:"BIOLOGY",    d:"The study of living organisms." },
+    { w:"CHEMISTRY",  d:"The study of matter and how substances interact." },
+    { w:"PHYSICS",    d:"The study of matter, energy, and forces." },
+    { w:"ART",        d:"The study and practice of creative visual expression." },
+    { w:"DRAMA",      d:"The study and performance of theatre and acting." },
+    { w:"MUSIC",      d:"The study of sound, rhythm, melody, and harmony." },
+    { w:"COMPUTING",  d:"The study of computers, coding, and digital systems." },
+    { w:"FRENCH",     d:"Study of the French language and Francophone culture." },
+    { w:"SPANISH",    d:"Study of Spanish — spoken across the globe." },
+    { w:"LATIN",      d:"Study of the classical language of ancient Rome." },
+  ],
+  "Famous Scientists": [
+    { w:"DARWIN",    d:"Charles Darwin — proposed the theory of evolution by natural selection." },
+    { w:"NEWTON",    d:"Isaac Newton — laws of motion and gravity." },
+    { w:"CURIE",     d:"Marie Curie — pioneer of radioactivity research, double Nobel laureate." },
+    { w:"EINSTEIN",  d:"Albert Einstein — developed the theory of relativity." },
+    { w:"TESLA",     d:"Nikola Tesla — revolutionised electrical systems." },
+    { w:"PASTEUR",   d:"Louis Pasteur — developed germ theory and vaccination." },
+    { w:"HAWKING",   d:"Stephen Hawking — theoretical physicist, famous for black hole research." },
+    { w:"FARADAY",   d:"Michael Faraday — pioneer of electromagnetic induction." },
+    { w:"TURING",    d:"Alan Turing — father of computer science and AI." },
+    { w:"LOVELACE",  d:"Ada Lovelace — the first computer programmer." },
+    { w:"MENDEL",    d:"Gregor Mendel — founder of the science of genetics." },
+    { w:"Fleming",   d:"Alexander Fleming — discovered penicillin." },
+  ],
+  "Elements": [
+    { w:"GOLD",      d:"A precious yellow metal — chemical symbol Au." },
+    { w:"IRON",      d:"A common structural metal — chemical symbol Fe." },
+    { w:"NEON",      d:"A noble gas that glows orange-red in signs." },
+    { w:"ARGON",     d:"The most common noble gas in Earth's atmosphere." },
+    { w:"XENON",     d:"A heavy noble gas used in camera flash bulbs." },
+    { w:"KRYPTON",   d:"A noble gas — also Superman's home planet." },
+    { w:"HELIUM",    d:"The lightest noble gas, used in balloons." },
+    { w:"BORON",     d:"A metalloid element used in glass and borax." },
+    { w:"CARBON",    d:"The element found in all living things — basis of organic chemistry." },
+    { w:"SULFUR",    d:"A yellow element with a distinctive rotten-egg smell." },
+    { w:"OXYGEN",    d:"Essential for respiration and combustion." },
+    { w:"SILICON",   d:"A metalloid element — the basis of computer chips." },
+    { w:"RADON",     d:"A radioactive noble gas that occurs naturally underground." },
+  ],
+  "Countries": [
+    { w:"FRANCE",    d:"A country in Western Europe known for art and cuisine." },
+    { w:"BRAZIL",    d:"The largest country in South America." },
+    { w:"CANADA",    d:"The second-largest country in the world by area." },
+    { w:"MEXICO",    d:"A country in North America bordered by the USA." },
+    { w:"INDIA",     d:"The most populous country in the world." },
+    { w:"JAPAN",     d:"An island nation in East Asia known for technology and culture." },
+    { w:"EGYPT",     d:"A North African country famous for its ancient civilisation." },
+    { w:"NORWAY",    d:"A Scandinavian country known for fjords and the Northern Lights." },
+    { w:"ITALY",     d:"A Southern European country shaped like a boot." },
+    { w:"KENYA",     d:"An East African country known for wildlife and the Maasai." },
+    { w:"TURKEY",    d:"A country bridging Europe and Asia." },
+    { w:"GHANA",     d:"A West African country — the first sub-Saharan nation to gain independence." },
+    { w:"CHILE",     d:"A long, narrow country along the western coast of South America." },
+    { w:"PERU",      d:"A South American country home to Machu Picchu and the Amazon." },
+    { w:"SWEDEN",    d:"A Scandinavian country known for design and IKEA." },
+  ]
+};
+
+// ── STATE ─────────────────────────────────────────────────
+let state = {};
+
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function newGame() {
+  document.getElementById('end-bg').classList.remove('open');
+  const cats = Object.keys(CATEGORIES);
+  const cat = rand(cats);
+  const wordObj = rand(CATEGORIES[cat]);
+  state = {
+    cat, word: wordObj.w, def: wordObj.d,
+    len: wordObj.w.length,
+    guesses: [], results: [],
+    current: [],
+    ghosts: new Array(wordObj.w.length).fill(null),
+    used: {},
+    over: false
+  };
+  render();
+}
+
+function render() {
+  const s = state;
+  document.getElementById('cat-pill').textContent = s.cat;
+  document.getElementById('length-hint').textContent = s.len + ' letters';
+  renderGhosts();
+  renderGrid();
+  renderInputDisplay();
+  renderAlphabet();
+}
+
+function renderGhosts() {
+  const el = document.getElementById('ghost-row');
+  el.innerHTML = '';
+  for (let i = 0; i < state.len; i++) {
+    const d = document.createElement('div');
+    d.className = 'ghost-hint' + (state.ghosts[i] ? ' visible' : '');
+    d.textContent = state.ghosts[i] || '';
+    el.appendChild(d);
+  }
+}
+
+function renderGrid() {
+  const el = document.getElementById('guess-grid');
+  el.innerHTML = '';
+  for (let r = 0; r < 6; r++) {
+    const row = document.createElement('div');
+    row.className = 'guess-row';
+    row.id = 'row-' + r;
+    for (let c = 0; c < state.len; c++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.id = `tile-${r}-${c}`;
+      if (r < state.guesses.length) {
+        tile.textContent = state.guesses[r][c];
+        tile.classList.add(state.results[r][c]);
+      }
+      row.appendChild(tile);
+    }
+    el.appendChild(row);
+  }
+}
+
+function renderInputDisplay() {
+  const el = document.getElementById('input-display');
+  el.innerHTML = '';
+  const cursorPos = state.current.length;
+  for (let i = 0; i < state.len; i++) {
+    const t = document.createElement('div');
+    const ch = state.current[i] || '';
+    t.className = 'input-tile' + (ch ? ' has-letter' : '') + (i === cursorPos ? ' cursor' : '');
+    t.textContent = ch;
+    el.appendChild(t);
+  }
+}
+
+function renderAlphabet() {
+  const el = document.getElementById('alphabet');
+  el.innerHTML = '';
+  for (let i = 0; i < 26; i++) {
+    const ch = String.fromCharCode(65 + i);
+    const k = document.createElement('div');
+    k.className = 'alpha-key' + (state.used[ch] ? ' ' + state.used[ch] : '');
+    k.textContent = ch;
+    k.onclick = () => doType(ch);
+    el.appendChild(k);
+  }
+}
+
+// ── ACTIONS ──────────────────────────────────────────────
+function doType(ch) {
+  if (state.over || state.current.length >= state.len) return;
+  state.current.push(ch);
+  renderInputDisplay();
+}
+
+function doBackspace() {
+  if (state.over || state.current.length === 0) return;
+  state.current.pop();
+  renderInputDisplay();
+}
+
+function doSubmit() {
+  const s = state;
+  if (s.over) return;
+  const guess = s.current.join('');
+  if (guess.length !== s.len) { toast('Not enough letters!'); shakeRow(s.guesses.length); return; }
+
+  const result = evaluate(guess, s.word);
+  s.guesses.push(guess);
+  s.results.push(result);
+  s.current = [];
+
+  // Update ghosts + used
+  const pri = { green:3, amber:2, grey:1 };
+  for (let i = 0; i < guess.length; i++) {
+    const ch = guess[i], col = result[i];
+    if (col === 'green') s.ghosts[i] = ch;
+    if (!s.used[ch] || pri[col] > pri[s.used[ch]]) s.used[ch] = col;
+  }
+
+  // Animate row tiles
+  const rowEl = document.getElementById('row-' + (s.guesses.length - 1));
+  if (rowEl) {
+    const tiles = rowEl.querySelectorAll('.tile');
+    tiles.forEach((tile, i) => {
+      setTimeout(() => {
+        tile.classList.add('flip');
+        setTimeout(() => {
+          tile.textContent = guess[i];
+          tile.classList.add(result[i]);
+        }, 225);
+      }, i * 80);
+    });
+  }
+
+  const delay = s.len * 80 + 350;
+  const won = result.every(r => r === 'green');
+  const lost = s.guesses.length >= 6;
+
+  setTimeout(() => {
+    render();
+    if (won)  { s.over = true; setTimeout(() => showEnd(true),  300); }
+    if (!won && lost) { s.over = true; setTimeout(() => showEnd(false), 300); }
+  }, delay);
+}
+
+function evaluate(guess, word) {
+  const res = new Array(guess.length).fill('grey');
+  const wArr = word.split(''), rem = [];
+  for (let i = 0; i < guess.length; i++) {
+    if (guess[i] === wArr[i]) { res[i] = 'green'; wArr[i] = null; }
+    else rem.push(i);
+  }
+  for (const i of rem) {
+    const idx = wArr.indexOf(guess[i]);
+    if (idx !== -1) { res[i] = 'amber'; wArr[idx] = null; }
+  }
+  return res;
+}
+
+function showEnd(won) {
+  const s = state;
+  document.getElementById('end-emoji').textContent  = won ? '🎉' : '😬';
+  const titleEl = document.getElementById('end-title');
+  titleEl.textContent = won ? 'Brilliant!' : 'Unlucky!';
+  titleEl.className = 'end-title ' + (won ? 'win' : 'lose');
+  document.getElementById('end-subtitle').textContent = won
+    ? `Solved in ${s.guesses.length} guess${s.guesses.length===1?'':'es'}`
+    : 'The word was...';
+  document.getElementById('end-word').textContent = s.word;
+  document.getElementById('end-def').textContent  = s.def;
+
+  const recap = document.getElementById('end-recap');
+  recap.innerHTML = '';
+  for (let r = 0; r < s.guesses.length; r++) {
+    const row = document.createElement('div');
+    row.className = 'recap-row';
+    for (let c = 0; c < s.len; c++) {
+      const t = document.createElement('div');
+      t.className = 'recap-tile ' + (s.results[r][c] || 'empty');
+      row.appendChild(t);
+    }
+    recap.appendChild(row);
+  }
+  document.getElementById('end-bg').classList.add('open');
+}
+
+function shakeRow(r) {
+  const el = document.getElementById('row-' + r);
+  if (!el) return;
+  el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 400);
+}
+
+function toast(msg, dur=2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { doSubmit(); return; }
+  if (e.key === 'Backspace') { doBackspace(); return; }
+  const ch = e.key.toUpperCase();
+  if (/^[A-Z]$/.test(ch)) doType(ch);
+});
+
+// Overlay close
+document.getElementById('htp-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('htp-modal')) closeModal('htp-modal');
+});
+
+newGame();
+</script>
+</body>
+</html>

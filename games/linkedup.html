@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linked Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
+  <style>
+    :root{--paper:#f5ead6;--ink:#2c1810;--green:#3d6b4f;--amber:#b8740a;--grey:#9e8e7a;--accent:#8b3a1a;--y:#c8a800;--g:#3d6b4f;--b:#2a5a7a;--p:#6b3a7a}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Special Elite",serif}
+    body{min-height:100dvh;background-image:linear-gradient(rgba(44,24,16,.045) 1px,transparent 1px),radial-gradient(circle at 20% 20%,rgba(139,58,26,.08),transparent 28%);background-size:100% 31px,auto}
+    button{font:inherit;color:inherit;cursor:pointer}
+    .page{width:min(700px,100%);margin:0 auto;padding:18px 14px 36px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+    h1{margin:0;font-family:Caveat,cursive;font-size:clamp(2.2rem,8vw,3.8rem);font-weight:700;text-shadow:2px 2px 0 rgba(184,116,10,.28)}
+    .btn{border:2px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:3px;padding:10px 13px;box-shadow:3px 3px 0 var(--accent);text-transform:uppercase;min-height:42px}
+    .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--accent)}
+    .btn.ghost{background:var(--paper);color:var(--ink)}
+    .subtitle{font-size:.9rem;color:var(--accent);margin-bottom:14px}
+
+    /* solved banners */
+    .solved-area{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;min-height:0}
+    .banner{border:2px solid var(--ink);border-radius:3px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;animation:popIn .3s ease}
+    .banner.y{background:#e8d060;}.banner.g{background:#7ab890;color:#fff}.banner.b{background:#6aaac8;}.banner.p{background:#b07ac8;color:#fff}
+    .banner-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;opacity:.75}
+    .banner-words{font-family:Caveat,cursive;font-size:1.3rem;font-weight:700}
+    @keyframes popIn{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+
+    /* word grid */
+    .word-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}
+    .word-btn{border:2px solid var(--ink);background:var(--paper);border-radius:3px;padding:13px 6px;text-align:center;text-transform:uppercase;font-size:.88rem;line-height:1.2;min-height:54px;box-shadow:2px 2px 0 rgba(44,24,16,.18);transition:background .12s,color .12s,transform .1s}
+    .word-btn:hover{background:rgba(44,24,16,.07)}
+    .word-btn.sel{background:var(--ink);color:var(--paper);transform:translateY(-2px);box-shadow:3px 4px 0 var(--accent)}
+    .word-btn.wrong{animation:shake .35s}
+
+    /* mistakes */
+    .mistakes{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:.9rem}
+    .dot{width:13px;height:13px;border-radius:50%;background:var(--ink);border:2px solid var(--ink);display:inline-block;transition:background .2s}
+    .dot.gone{background:var(--paper)}
+
+    /* controls */
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* toast */
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:500;background:var(--ink);color:var(--paper);border:2px solid var(--accent);padding:10px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap}
+    .toast.show{opacity:1}
+
+    /* modal */
+    .modal{position:fixed;inset:0;background:rgba(44,24,16,.42);z-index:300;display:none;align-items:center;justify-content:center;padding:16px}
+    .modal.show{display:flex}
+    .note{width:min(520px,100%);max-height:90dvh;overflow-y:auto;background:var(--paper);border:2px solid var(--ink);border-radius:4px;padding:22px;box-shadow:7px 7px 0 rgba(44,24,16,.3);background-image:linear-gradient(transparent 30px,rgba(139,58,26,.22) 31px);background-size:100% 31px}
+    .note h2{margin:0 0 12px;font-family:Caveat,cursive;font-size:2rem;font-weight:700}
+    .note ol{padding-left:20px;line-height:1.75}
+    .tiers{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+    .tier{border:2px solid var(--ink);border-radius:3px;padding:7px 12px;font-size:.9rem}
+    .tier.y{background:#e8d060}.tier.g{background:#7ab890}.tier.b{background:#6aaac8}.tier.p{background:#b07ac8;color:#fff}
+
+    @keyframes shake{10%,90%{transform:translateX(-4px)}30%,70%{transform:translateX(5px)}50%{transform:translateX(-6px)}}
+    @media(max-width:460px){.word-grid{grid-template-columns:repeat(2,1fr)}.word-btn{font-size:.8rem;padding:11px 4px}.controls{flex-direction:column}.btn{text-align:center}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <div class="top">
+    <h1>Linked Up</h1>
+    <button class="btn ghost" id="how">How to Play</button>
+  </div>
+  <p class="subtitle">Find four groups of four. Select four words and submit.</p>
+  <div class="solved-area" id="solved"></div>
+  <div class="word-grid" id="wgrid"></div>
+  <div class="mistakes" id="mistakes"></div>
+  <div class="controls">
+    <button class="btn ghost" id="shuffleBtn">Shuffle</button>
+    <button class="btn ghost" id="deselectBtn">Deselect All</button>
+    <button class="btn" id="submitBtn">Submit</button>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- HOW TO PLAY -->
+<div class="modal" id="help">
+  <div class="note">
+    <h2>How to Play</h2>
+    <ol>
+      <li>Sixteen words are hiding in four secret groups of four.</li>
+      <li>Select four words you think belong together, then hit <b>Submit</b>.</li>
+      <li>If you're right, the group is revealed with its category label.</li>
+      <li>Get it wrong and you lose one of your four mistakes.</li>
+      <li>If three of your four words are in the same group, you'll get a hint.</li>
+    </ol>
+    <p style="margin:10px 0 6px;font-size:.9rem">Groups are colour-coded by difficulty:</p>
+    <div class="tiers">
+      <div class="tier y">🟡 Yellow — Straightforward</div>
+      <div class="tier g">🟢 Green — Getting trickier</div>
+      <div class="tier b">🔵 Blue — Challenging</div>
+      <div class="tier p">🟣 Purple — Tricky!</div>
+    </div>
+    <button class="btn" style="margin-top:12px" data-close>Got it</button>
+  </div>
+</div>
+
+<!-- END CARD -->
+<div class="modal" id="end">
+  <div class="note" id="end-note"></div>
+</div>
+
+<script>
+const PUZZLES = [
+  {
+    groups:[
+      {label:"Planets",tier:"y",words:["MERCURY","VENUS","EARTH","MARS"]},
+      {label:"School Subjects",tier:"g",words:["FRENCH","HISTORY","PHYSICS","ART"]},
+      {label:"___ Board",tier:"b",words:["SKATE","CARD","KEY","SURF"]},
+      {label:"Types of Triangle",tier:"p",words:["SCALENE","OBTUSE","RIGHT","ISOSCELES"]}
+    ]
+  },
+  {
+    groups:[
+      {label:"Parts of a Cell",tier:"y",words:["NUCLEUS","MEMBRANE","CYTOPLASM","RIBOSOME"]},
+      {label:"Shakespeare Plays",tier:"g",words:["HAMLET","OTHELLO","MACBETH","TEMPEST"]},
+      {label:"River Features",tier:"b",words:["MEANDER","DELTA","ESTUARY","GORGE"]},
+      {label:"Prime Numbers",tier:"p",words:["TWO","THREE","FIVE","SEVEN"]}
+    ]
+  },
+  {
+    groups:[
+      {label:"World Oceans",tier:"y",words:["PACIFIC","ATLANTIC","ARCTIC","INDIAN"]},
+      {label:"Types of Rock",tier:"g",words:["GRANITE","MARBLE","BASALT","SLATE"]},
+      {label:"Literary Devices",tier:"b",words:["SIMILE","METAPHOR","ALLITERATION","ONOMATOPOEIA"]},
+      {label:"___ Force",tier:"p",words:["GRAVITY","NUCLEAR","AIR","ARMED"]}
+    ]
+  },
+  {
+    groups:[
+      {label:"Types of Energy",tier:"y",words:["SOLAR","KINETIC","NUCLEAR","THERMAL"]},
+      {label:"Maths Terms",tier:"g",words:["RADIUS","TANGENT","VECTOR","PRIME"]},
+      {label:"Famous Leaders",tier:"b",words:["GANDHI","LINCOLN","MANDELA","CHURCHILL"]},
+      {label:"Animals by the Sea",tier:"p",words:["DOLPHIN","SHARK","WHALE","SEAL"]}
+    ]
+  }
+];
+
+let puzzle, order, selected, solved, mistakes;
+
+function init(){
+  puzzle = PUZZLES[Math.floor(Math.random()*PUZZLES.length)];
+  const all = puzzle.groups.flatMap(g=>g.words);
+  order = shuffle([...all]);
+  selected = [];
+  solved = [];
+  mistakes = 0;
+  document.getElementById('solved').innerHTML='';
+  render();
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function render(){
+  // mistakes dots
+  const m = document.getElementById('mistakes');
+  m.innerHTML = 'Mistakes left: ';
+  for(let i=0;i<4;i++){
+    const d=document.createElement('span');
+    d.className='dot'+(i<mistakes?' gone':'');
+    m.appendChild(d);
+  }
+  // word grid — only unsolved words
+  const solvedWords = solved.flatMap(g=>g.words);
+  const remaining = order.filter(w=>!solvedWords.includes(w));
+  const grid=document.getElementById('wgrid');
+  grid.innerHTML='';
+  remaining.forEach(w=>{
+    const b=document.createElement('button');
+    b.className='word-btn'+(selected.includes(w)?' sel':'');
+    b.textContent=w;
+    b.onclick=()=>toggle(w);
+    grid.appendChild(b);
+  });
+}
+
+function toggle(w){
+  if(selected.includes(w)){selected=selected.filter(x=>x!==w)}
+  else if(selected.length<4){selected.push(w)}
+  else{toast('Select only 4 words');return}
+  render();
+}
+
+document.getElementById('shuffleBtn').onclick=()=>{
+  const solvedWords=solved.flatMap(g=>g.words);
+  const rem=order.filter(w=>!solvedWords.includes(w));
+  shuffle(rem);
+  order=[...solvedWords,...rem];
+  selected=[];
+  render();
+};
+
+document.getElementById('deselectBtn').onclick=()=>{selected=[];render()};
+
+document.getElementById('submitBtn').onclick=()=>{
+  if(selected.length!==4){toast('Pick exactly 4 words first');return}
+  // find matching group
+  const match=puzzle.groups.find(g=>
+    !solved.includes(g)&&selected.every(w=>g.words.includes(w))
+  );
+  if(match){
+    solved.push(match);
+    selected=[];
+    // add banner
+    const area=document.getElementById('solved');
+    const b=document.createElement('div');
+    b.className=`banner ${match.tier}`;
+    b.innerHTML=`<span class="banner-label">${match.label}</span><span class="banner-words">${match.words.join(' · ')}</span>`;
+    area.appendChild(b);
+    if(solved.length===puzzle.groups.length){setTimeout(()=>finish(true),400)}
+    else toast('Correct! ✓');
+    render();
+  } else {
+    // check one-away
+    let best=0;
+    puzzle.groups.forEach(g=>{
+      if(solved.includes(g))return;
+      const c=selected.filter(w=>g.words.includes(w)).length;
+      if(c>best)best=c;
+    });
+    mistakes++;
+    // shake selected
+    document.querySelectorAll('.word-btn.sel').forEach(b=>{b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),360)});
+    selected=[];
+    if(best===3)toast('One away! 👀');
+    else toast('Not quite — try again');
+    render();
+    if(mistakes>=4)setTimeout(()=>finish(false),400);
+  }
+};
+
+function finish(win){
+  const note=document.getElementById('end-note');
+  const unsolvedBanners=puzzle.groups.filter(g=>!solved.includes(g)).map(g=>`<div class="banner ${g.tier}" style="margin-bottom:6px"><span class="banner-label">${g.label}</span><span class="banner-words">${g.words.join(' · ')}</span></div>`).join('');
+  note.innerHTML=`
+    <h2>${win?'All linked! 🎉':'Stumped! 😬'}</h2>
+    <p style="margin-bottom:12px">${win?`You found all four groups with ${mistakes} mistake${mistakes===1?'':'s'}.`:'Here are the groups you missed:'}</p>
+    ${win?'':unsolvedBanners}
+    <button class="btn" onclick="init();document.getElementById('end').classList.remove('show')">Play Again</button>
+  `;
+  document.getElementById('end').classList.add('show');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+document.getElementById('how').onclick=()=>document.getElementById('help').classList.add('show');
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('show'));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+
+init();
+</script>
+</body>
+</html>
