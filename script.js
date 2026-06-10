@@ -114,24 +114,23 @@
     iconClass: "thunder-logo",
     title: "Welcome to Formly!",
     content: `
-    Love educational games? Puzzles? Well this is Formly, a free collection of educational puzzles and games designed to stretch those brains in form time. These games are educational, but are also (almost too) fun!
+    Love educational games? Puzzles? Well this is Formly, a free collection of educational puzzles and games designed to stretch those brains. These games are educational, but are also (almost too) fun!
     `,
     buttonText: "Continue",
   };
 
   const CHANGELOG_DATA = {
     iconClass: "ri-history-line",
-    title: "Changelog for v4.4",
+    title: "Changelog for v1.1",
     content: `
-    Looks like there's nothing here yet...
-    Check back later!
+    - Added my Custom Games!
     `,
     buttonText: "Back",
   };
 
   const H2_TITLE_ICON = (icon) =>
     icon === "thunder-logo"
-      ? `<img src="/asset/thunder.svg" alt="THUNDER" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;filter:brightness(0) invert(1);">`
+      ? `<img src="/asset/FORMLY.svg" alt="THUNDER" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;filter:brightness(0) invert(1);">`
       : `<i class="${icon}"></i>`;
 
   function resetSideButtonActiveState() {
